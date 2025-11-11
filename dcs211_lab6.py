@@ -26,16 +26,27 @@ test = [
     ("Gary is a friend of mine.", "pos"),
     ("I can't believe I'm doing this.", "neg"),
 ]
-'''
+
+new_train_set_len = 0
+new_train_set = []
 for review in train:
+    new_train_set_len += 1
     sentence = review[0]
     sentence = nltk.word_tokenize(sentence)
     sentence_pos = nltk.pos_tag(sentence)
-    print(sentence_pos)
+    new_sentence = ""
+    for word in sentence_pos:
+        if word[1] not in ('PRP', 'DT', 'IN'):
+            new_sentence = new_sentence + ' ' + word[0]
+    new_train_set += (new_sentence, review[1])
+
+print(new_train_set)
+
 '''
-cl = NaiveBayesClassifier(train)
+cl = NaiveBayesClassifier(new_train_set)
 
 cl.show_informative_features()
+'''
 '''
 for review in train:
     print(cl.classify(review[0]))
