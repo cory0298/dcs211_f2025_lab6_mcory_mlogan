@@ -27,37 +27,57 @@ test = [
     ("I can't believe I'm doing this.", "neg"),
 ]
 
-new_train_set_len = 0
+def processText(text: str) -> str:
+    '''
+    helper function to break down text into important words basedd on parts of speech
+    parameters:
+        text: given sentence review.
+    returns: 
+        broken down sentence review. 
+    '''
+    tokens = nltk.word_tokenize(text)
+    tagged = nltk.pos_tag(tokens)
+    keep = [w for w, pos in tagged if pos not in ('PRP', 'DT', 'IN')]
+    return " ".join(keep)
+
+
+# This part creates the new training set that has only the important words. It gets rid of things like it/this/that to prevent the model from getting confused
 new_train_set = []
-for review in train:
-    new_train_set_len += 1
-    sentence = review[0]
-    sentence = nltk.word_tokenize(sentence)
-    sentence_pos = nltk.pos_tag(sentence)
-    new_sentence = ""
-    for word in sentence_pos:
-        if word[1] not in ('PRP', 'DT', 'IN'):
-            new_sentence = new_sentence + ' ' + word[0]
-    new_train_set += (new_sentence, review[1])
+for text, label in train:
+    processed = processText(text)
+    new_train_set.append((processed, label))
 
-print(new_train_set)
 
-'''
+#trains the model on the new set
 cl = NaiveBayesClassifier(new_train_set)
 
-cl.show_informative_features()
-'''
-'''
-for review in train:
-    print(cl.classify(review[0]))
-    prob_dist = cl.prob_classify(review[0])
-    print(prob_dist)
-    print(prob_dist.max())
+#cl.show_informative_features()
 
+#training set
+for text, _ in train:
+    prediction = cl.classify(processText(text))
+    print(f"Review: {text}\n → Predicted: {prediction}\n")
 
-for review in test:
-    print(cl.classify(review[0]))
-    prob_dist = cl.prob_classify(review[0])
-    print(prob_dist)
-    print(prob_dist.max())
-'''
+#testing set
+for text, actual in test:
+    prediction = cl.classify(processText(text))
+    print(f"Review: {text}\nActual: {actual} | Predicted: {prediction}\n")
+
+#accuracy checker
+test_processed = [(processText(t), label) for t, label in test]
+accuracy = cl.accuracy(test_processed)
+print(f"Classifier accuracy on test set: {accuracy}")
+
+#actual utility, asks you to provide reviews that are then classified, quits when you write quit
+print("\nEnter a restaurant/meal review.")
+print("Type 'quit' to exit.\n")
+
+while True:
+    user_text = input("Your review: ")
+    if user_text.lower().strip() == "quit":
+        break
+
+    processed = processText(user_text)
+    print("Prediction:", cl.classify(processed))
+    print()
+
